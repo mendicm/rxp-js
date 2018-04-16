@@ -14,6 +14,11 @@ var RealexHpp = (function() {
 	var setHppUrl = function(url) {
 		hppUrl = url;
 	};
+
+	var closeCallback = false;
+    var setCloseCallback = function(callback) {
+        closeCallback = callback;
+    };
 	
 	var isWindowsMobileOs = /Windows Phone|IEMobile/.test(navigator.userAgent);
 	var isAndroidOrIOs = /Android|iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -55,7 +60,18 @@ var RealexHpp = (function() {
 					}, false);
 				}
 			}
-			
+
+            function toggleClass(element, toggleClass){
+                var currentClass = element.className;
+                var newClass;
+                if(currentClass.split(" ").indexOf(toggleClass) > -1){ //has class
+                    newClass = currentClass.replace(new RegExp('\\b'+toggleClass+'\\b','g'),"")
+                }else{
+                    newClass = currentClass + " " + toggleClass;
+                }
+                element.className = newClass.trim();
+            }
+
 			// Initialising some variables used throughout this function.
 			function createOverlay() {
 				var overlay = document.createElement("div");
@@ -66,15 +82,16 @@ var RealexHpp = (function() {
 				overlay.style.top="0";
 				overlay.style.left="0";
 				overlay.style.transition="all 0.3s ease-in-out";
-				overlay.style.zIndex="100"; 
-                
+				overlay.style.zIndex="100";
+                overlay.className = 'rxp-overlay'
+
 				if(isMobileIFrame){
 					overlay.style.position="absolute !important";
 					overlay.style.WebkitOverflowScrolling = "touch";
 					overlay.style.overflowX = "hidden";
 					overlay.style.overflowY = "scroll";
 				}
-				
+
 				document.body.appendChild(overlay);
 
 				setTimeout(function() {
@@ -84,7 +101,7 @@ var RealexHpp = (function() {
 				overlayElement = overlay;
 			}
 
-			
+
 			function createCloseButton(){
 				if(document.getElementById("rxp-frame-close-" + randomId) === null) {
 					closeButton = document.createElement("img");
@@ -179,6 +196,7 @@ var RealexHpp = (function() {
 				iFrame.style.opacity="0";
 				
 				overlayElement.appendChild(iFrame);
+                toggleClass(document.body, 'rxp-overlay');
 				
 				if(isMobileIFrame){
 					iFrame.style.top = "0px";
@@ -260,6 +278,10 @@ var RealexHpp = (function() {
 				setTimeout(function() {
 					if (overlayElement.parentNode) {
 						overlayElement.parentNode.removeChild(overlayElement);
+					}
+                    toggleClass(document.body, 'rxp-overlay');
+					if (closeCallback) {
+                        closeCallback();
 					}
 				}, 300);
 			}
@@ -396,7 +418,8 @@ var RealexHpp = (function() {
 
 	return {
 		init : init,
-		setHppUrl : setHppUrl
+		setHppUrl : setHppUrl,
+        setCloseCallback : setCloseCallback
 	};
 
 }());
